@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-
-</PreferenceScreen>
+<account-authenticator xmlns:android="http://schemas.android.com/apk/res/android"
+                       android:accountType="com.udinic.auth_example"
+                       android:icon="@mipmap/ic_launcher"
+                       android:smallIcon="@mipmap/ic_launcher"
+                       android:label="@string/label"
+                       android:accountPreferences="@xml/prefs"/>
