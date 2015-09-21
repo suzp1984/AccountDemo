@@ -39,9 +39,10 @@
         </service>
 
         <activity
-            android:name=".GithubLoginActivity"
+            android:name=".GithubAuthenticatorActivity"
             android:label="@string/title_activity_github_login"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="true" >
         </activity>
     </application>
 
