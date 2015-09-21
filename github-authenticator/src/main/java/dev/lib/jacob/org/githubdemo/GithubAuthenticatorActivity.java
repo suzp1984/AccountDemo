@@ -1,10 +1,13 @@
 package dev.lib.jacob.org.githubdemo;
 
+import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
+import android.accounts.AccountManager;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -24,11 +27,14 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import dev.lib.jacob.org.githubdemo.service.FakeAuthenticatorServer;
+import dev.lib.jacob.org.githubdemo.service.IAuthenticatorServer;
+
 /**
  * A login screen that offers login via email/password.
  */
 public class GithubAuthenticatorActivity extends AccountAuthenticatorActivity {
-    
+
     public final static String ARG_ACCOUNT_TYPE = "ACCOUNT_TYPE";
     public final static String ARG_AUTH_TYPE = "AUTH_TYPE";
     public final static String ARG_ACCOUNT_NAME = "ACCOUNT_NAME";
@@ -36,22 +42,13 @@ public class GithubAuthenticatorActivity extends AccountAuthenticatorActivity {
 
     public final static String PARAM_USER_PASS = "USER_PASS";
 
-
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
-    };
-
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
 
     // UI references.
-    private AutoCompleteTextView mEmailView;
+    private AutoCompleteTextView mUserView;
 
     private EditText mPasswordView;
 
@@ -59,12 +56,30 @@ public class GithubAuthenticatorActivity extends AccountAuthenticatorActivity {
 
     private View mLoginFormView;
 
+    private AccountManager mAccountManager;
+    private String mAuthTokenType;
+    private String mAccountType;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_github_login);
+
+        mAccountManager = AccountManager.get(this);
+        String accountName = getIntent().getStringExtra(ARG_ACCOUNT_NAME);
+        mAccountType = getIntent().getStringExtra(ARG_ACCOUNT_TYPE);
+        mAuthTokenType = getIntent().getStringExtra(ARG_AUTH_TYPE);
+
+        if (mAuthTokenType == null) {
+            mAuthTokenType = GithubAccount.AUTHTOKEN_TYPE_TEST;
+        }
+
         // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        mUserView = (AutoCompleteTextView) findViewById(R.id.user);
+
+        if (accountName != null) {
+            mUserView.setText(accountName);
+        }
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -78,8 +93,8 @@ public class GithubAuthenticatorActivity extends AccountAuthenticatorActivity {
             }
         });
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
-        mEmailSignInButton.setOnClickListener(new OnClickListener() {
+        Button signInButton = (Button) findViewById(R.id.sign_in_button);
+        signInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 attemptLogin();
@@ -101,11 +116,11 @@ public class GithubAuthenticatorActivity extends AccountAuthenticatorActivity {
         }
 
         // Reset errors.
-        mEmailView.setError(null);
+        mUserView.setError(null);
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
+        String user = mUserView.getText().toString();
         String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
@@ -118,14 +133,9 @@ public class GithubAuthenticatorActivity extends AccountAuthenticatorActivity {
             cancel = true;
         }
 
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(email)) {
-            mEmailView.setError(getString(R.string.error_field_required));
-            focusView = mEmailView;
-            cancel = true;
-        } else if (!isEmailValid(email)) {
-            mEmailView.setError(getString(R.string.error_invalid_email));
-            focusView = mEmailView;
+        if (TextUtils.isEmpty(user)) {
+            mUserView.setError(getString(R.string.error_field_required));
+            focusView = mUserView;
             cancel = true;
         }
 
@@ -137,14 +147,9 @@ public class GithubAuthenticatorActivity extends AccountAuthenticatorActivity {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
+            mAuthTask = new UserLoginTask(user, password);
             mAuthTask.execute((Void) null);
         }
-    }
-
-    private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
-        return email.contains("@");
     }
 
     private boolean isPasswordValid(String password) {
@@ -188,54 +193,26 @@ public class GithubAuthenticatorActivity extends AccountAuthenticatorActivity {
         }
     }
 
-    private interface ProfileQuery {
+    private void finishLogin(Intent data) {
+        String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+        String password = data.getStringExtra(PARAM_USER_PASS);
 
-        String[] PROJECTION = {
-                ContactsContract.CommonDataKinds.Email.ADDRESS,
-                ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
-        };
+        final Account account = new Account(accountName,
+                data.getStringExtra(AccountManager.KEY_ACCOUNT_TYPE));
 
-        int ADDRESS = 0;
-        int IS_PRIMARY = 1;
-    }
+        if (getIntent().getBooleanExtra(ARG_IS_ADDING_NEW_ACCOUNT, false)) {
+            String authToken = data.getStringExtra(AccountManager.KEY_AUTHTOKEN);
+            String authTokenType = mAuthTokenType;
 
-    /**
-     * Use an AsyncTask to fetch the user's email addresses on a background thread, and update
-     * the email text field with results on the main UI thread.
-     */
-    class SetupEmailAutoCompleteTask extends AsyncTask<Void, Void, List<String>> {
-
-        @Override
-        protected List<String> doInBackground(Void... voids) {
-            ArrayList<String> emailAddressCollection = new ArrayList<String>();
-
-            // Get all emails from the user's contacts and copy them to a list.
-            ContentResolver cr = getContentResolver();
-            Cursor emailCur = cr.query(ContactsContract.CommonDataKinds.Email.CONTENT_URI, null,
-                    null, null, null);
-            while (emailCur.moveToNext()) {
-                String email = emailCur.getString(emailCur.getColumnIndex(ContactsContract
-                        .CommonDataKinds.Email.DATA));
-                emailAddressCollection.add(email);
-            }
-            emailCur.close();
-
-            return emailAddressCollection;
+            mAccountManager.addAccountExplicitly(account, password, null);
+            mAccountManager.setAuthToken(account, authTokenType, authToken);
+        } else {
+            mAccountManager.setPassword(account, password);
         }
 
-        @Override
-        protected void onPostExecute(List<String> emailAddressCollection) {
-            addEmailsToAutoComplete(emailAddressCollection);
-        }
-    }
-
-    private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
-        //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<String>(GithubAuthenticatorActivity.this,
-                        android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
-
-        mEmailView.setAdapter(adapter);
+        setAccountAuthenticatorResult(data.getExtras());
+        setResult(RESULT_OK, data);
+        finish();
     }
 
     /**
@@ -244,12 +221,12 @@ public class GithubAuthenticatorActivity extends AccountAuthenticatorActivity {
      */
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
-        private final String mEmail;
+        private final String mUser;
 
         private final String mPassword;
 
-        UserLoginTask(String email, String password) {
-            mEmail = email;
+        UserLoginTask(String user, String password) {
+            mUser = user;
             mPassword = password;
         }
 
@@ -257,23 +234,25 @@ public class GithubAuthenticatorActivity extends AccountAuthenticatorActivity {
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
 
-            try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
+            IAuthenticatorServer server = new FakeAuthenticatorServer();
+
+            String authToken = server.getAuthToken(mUser, mPassword, GithubAccount.AUTHTOKEN_TYPE_TEST);
+
+            if (authToken != null) {
+
+                Bundle data = new Bundle();
+                data.putString(AccountManager.KEY_ACCOUNT_NAME, mUser);
+                data.putString(AccountManager.KEY_ACCOUNT_TYPE, mAccountType);
+                data.putString(AccountManager.KEY_AUTHTOKEN, authToken);
+                data.putString(PARAM_USER_PASS, mPassword);
+
+                final Intent res = new Intent();
+                res.putExtras(data);
+
+                finishLogin(res);
             }
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
-
-            // TODO: register the new account here.
-            return true;
+            return authToken != null;
         }
 
         @Override
