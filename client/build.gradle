@@ -10,7 +10,7 @@ android {
         }
     }
     compileSdkVersion 23
-    buildToolsVersion "23.0.0"
+    buildToolsVersion "23.0.1"
     defaultConfig {
         applicationId "test.zpcat.org.accountdemo"
         minSdkVersion 10
