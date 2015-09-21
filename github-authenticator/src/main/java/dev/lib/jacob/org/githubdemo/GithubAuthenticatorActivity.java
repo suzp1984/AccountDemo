@@ -28,6 +28,14 @@ import java.util.List;
  * A login screen that offers login via email/password.
  */
 public class GithubAuthenticatorActivity extends AccountAuthenticatorActivity {
+    
+    public final static String ARG_ACCOUNT_TYPE = "ACCOUNT_TYPE";
+    public final static String ARG_AUTH_TYPE = "AUTH_TYPE";
+    public final static String ARG_ACCOUNT_NAME = "ACCOUNT_NAME";
+    public final static String ARG_IS_ADDING_NEW_ACCOUNT = "IS_ADDING_ACCOUNT";
+
+    public final static String PARAM_USER_PASS = "USER_PASS";
+
 
     /**
      * A dummy authentication store containing known user names and passwords.
