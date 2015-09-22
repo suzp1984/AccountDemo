@@ -5,7 +5,6 @@ import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorException;
-import android.accounts.OnAccountsUpdateListener;
 import android.accounts.OperationCanceledException;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,13 +16,33 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 
 import java.io.IOException;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import test.zpcat.org.accountdemo.dialog.AccountPickDialogFragment;
 
 public class MainActivity extends AppCompatActivity {
 
     private final String TAG = MainActivity.class.getSimpleName();
+
+    @Bind(R.id.add_account)
+    Button mAddAccountBtn;
+
+    @Bind(R.id.get_token)
+    Button mGetAuthTokenBtn;
+
+    @Bind(R.id.invalidate_token)
+    Button mInvalidateBtn;
+
+    @Bind(R.id.fab)
+    FloatingActionButton mFab;
+
+    @Bind(R.id.toolbar)
+    Toolbar mToolbar;
 
     AccountManager mAccountManager;
 
@@ -33,11 +52,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        ButterKnife.bind(this);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        if (mToolbar != null) {
+            setSupportActionBar(mToolbar);
+        }
+
+        mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
@@ -46,36 +67,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         mAccountManager = AccountManager.get(this);
-
-        Account[] accounts = mAccountManager.getAccounts();
-
-        for (Account account : accounts) {
-            Log.e(TAG, account.name + ": " + account.type);
-
-            mAccountManager.getAuthToken(account, "mail", null, this, new AccountManagerCallback<Bundle>() {
-                @Override
-                public void run(AccountManagerFuture<Bundle> accountManagerFuture) {
-                    try {
-                        Bundle bundle = accountManagerFuture.getResult();
-                        Log.e(TAG, bundle.toString()); //bundle.toString();
-                    } catch (OperationCanceledException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (AuthenticatorException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }, mHandler);
-
-            mAccountManager.addOnAccountsUpdatedListener(new OnAccountsUpdateListener() {
-                @Override
-                public void onAccountsUpdated(Account[] accounts) {
-
-                }
-            }, null, false);
-            // String password = mAccountManager.getPassword(account);
-        }
     }
 
     @Override
@@ -98,5 +89,114 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onDestroy() {
+        ButterKnife.unbind(this);
+
+        super.onDestroy();
+    }
+
+    @OnClick(R.id.add_account)
+    public void addAccount() {
+        mAccountManager.addAccount(GithubAccount.ACCOUNT_TYPE,
+                GithubAccount.AUTHTOKEN_TYPE_TEST,
+                null, null, this, new AccountManagerCallback<Bundle>() {
+                    @Override
+                    public void run(AccountManagerFuture<Bundle> future) {
+                        try {
+                            Bundle bundle = future.getResult();
+                            Log.d(TAG, "Add New Account bundle is: " + bundle);
+                            Snackbar.make(mFab, bundle.toString(), Snackbar.LENGTH_LONG)
+                                    .show();
+                            // TODO:dev add account finished do something
+
+                        } catch (OperationCanceledException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (AuthenticatorException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, null);
+    }
+
+    @OnClick(R.id.get_token)
+    public void getAuthToken() {
+        AccountPickDialogFragment pickDialogFragment = new AccountPickDialogFragment();
+        pickDialogFragment.setAccountPickListener(
+                new AccountPickDialogFragment.AccountPickListener() {
+                    @Override
+                    public void onAccountChoice(Account account) {
+                        Log.e(TAG, "on Account pick: " + account.name);
+                        mAccountManager.getAuthToken(account, GithubAccount.AUTHTOKEN_TYPE_TEST,
+                                null,
+                                MainActivity.this, new AccountManagerCallback<Bundle>() {
+                                    @Override
+                                    public void run(AccountManagerFuture<Bundle> future) {
+                                        try {
+                                            Bundle bundle = future.getResult();
+
+                                            final String authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
+                                            Log.e(TAG, "get AuthToken: " + authToken);
+                                            Snackbar.make(mFab, bundle.toString(), Snackbar.LENGTH_LONG)
+                                                    .show();
+                                        } catch (OperationCanceledException e) {
+                                            e.printStackTrace();
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        } catch (AuthenticatorException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                }, null);
+                    }
+                });
+
+        pickDialogFragment.show(getSupportFragmentManager(), "account-pick");
+    }
+
+    @OnClick(R.id.invalidate_token)
+    public void invalidate_token() {
+
+        AccountPickDialogFragment pickDialogFragment = new AccountPickDialogFragment();
+
+        pickDialogFragment.setAccountPickListener(
+                new AccountPickDialogFragment.AccountPickListener() {
+                    @Override
+                    public void onAccountChoice(Account account) {
+                        Log.e(TAG, "on Account pick: " + account.name);
+                        mAccountManager.getAuthToken(account, GithubAccount.AUTHTOKEN_TYPE_TEST,
+                                null,
+                                MainActivity.this, new AccountManagerCallback<Bundle>() {
+                                    @Override
+                                    public void run(AccountManagerFuture<Bundle> future) {
+                                        try {
+                                            Bundle bundle = future.getResult();
+
+                                            final String authToken = bundle
+                                                    .getString(AccountManager.KEY_AUTHTOKEN);
+                                            Log.e(TAG, "get AuthToken: " + authToken);
+                                            mAccountManager.invalidateAuthToken(
+                                                    GithubAccount.ACCOUNT_TYPE, authToken);
+                                            Snackbar.make(mFab, "Auth token: (" + authToken
+                                                            + ") being invalidated and removed from cache",
+                                                    Snackbar.LENGTH_LONG)
+                                                    .show();
+                                        } catch (OperationCanceledException e) {
+                                            e.printStackTrace();
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        } catch (AuthenticatorException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                }, null);
+                    }
+                });
+
+        pickDialogFragment.show(getSupportFragmentManager(), "invalidate_token");
     }
 }
