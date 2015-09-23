@@ -1,1 +1,1 @@
-include ':clientSample', ':github-authenticator'
+include ':clientSample', ':github-authenticator', ':exceptionclientsample'
