@@ -1,4 +1,4 @@
-package dev.lib.jacob.org.githubdemo.service;
+package io.github.suzp1984.account.service;
 
 import android.accounts.AbstractAccountAuthenticator;
 import android.accounts.Account;
@@ -11,8 +11,8 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
-import dev.lib.jacob.org.githubdemo.GithubAccount;
-import dev.lib.jacob.org.githubdemo.GithubAuthenticatorActivity;
+import io.github.suzp1984.account.githubdemo.GithubAccount;
+import io.github.suzp1984.account.githubdemo.GithubAuthenticatorActivity;
 
 /**
  * Created by moses on 9/15/15.

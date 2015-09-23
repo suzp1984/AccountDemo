@@ -1,4 +1,4 @@
-package dev.lib.jacob.org.githubdemo.service;
+package io.github.suzp1984.account.service;
 
 /**
  * Created by moses on 9/21/15.

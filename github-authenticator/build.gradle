@@ -12,7 +12,7 @@ android {
     compileSdkVersion 23
     buildToolsVersion "23.0.1"
     defaultConfig {
-        applicationId "dev.lib.jacob.org.githubdemo"
+        applicationId "io.github.suzp1984.account.authenticator"
         minSdkVersion 10
         targetSdkVersion 23
         versionCode 1

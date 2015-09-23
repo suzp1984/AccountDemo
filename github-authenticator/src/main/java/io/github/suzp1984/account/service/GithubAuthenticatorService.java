@@ -1,4 +1,4 @@
-package dev.lib.jacob.org.githubdemo.service;
+package io.github.suzp1984.account.service;
 
 import android.app.Service;
 import android.content.Intent;

@@ -1,4 +1,4 @@
-package dev.lib.jacob.org.githubdemo;
+package io.github.suzp1984.account.githubdemo;
 
 import org.junit.Test;
 
