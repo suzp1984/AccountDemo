@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">ExceptionClientSample</string>
     <string name="action_settings">Settings</string>
+    <string name="add_account">Add Account</string>
+    <string name="get_token">Get AuthToken</string>
+    <string name="invalidate_token">Invalidate AuthToken</string>
 </resources>
