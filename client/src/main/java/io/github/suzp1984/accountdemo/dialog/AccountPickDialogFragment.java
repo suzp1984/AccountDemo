@@ -1,4 +1,4 @@
-package test.zpcat.org.accountdemo.dialog;
+package io.github.suzp1984.accountdemo.dialog;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -9,12 +9,11 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import test.zpcat.org.accountdemo.GithubAccount;
+import io.github.suzp1984.accountdemo.GithubAccount;
 
 public class AccountPickDialogFragment extends DialogFragment {
 

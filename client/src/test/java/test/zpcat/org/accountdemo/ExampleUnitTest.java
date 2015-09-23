@@ -1,4 +1,4 @@
-package test.zpcat.org.accountdemo;
+package io.github.suzp1984.accountdemo;
 
 import org.junit.Test;
 

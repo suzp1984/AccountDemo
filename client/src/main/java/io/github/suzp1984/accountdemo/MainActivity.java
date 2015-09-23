@@ -1,4 +1,4 @@
-package test.zpcat.org.accountdemo;
+package io.github.suzp1984.accountdemo;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -23,7 +23,7 @@ import java.io.IOException;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import test.zpcat.org.accountdemo.dialog.AccountPickDialogFragment;
+import io.github.suzp1984.accountdemo.dialog.AccountPickDialogFragment;
 
 public class MainActivity extends AppCompatActivity {
 

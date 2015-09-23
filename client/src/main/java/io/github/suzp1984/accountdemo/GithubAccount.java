@@ -1,4 +1,4 @@
-package test.zpcat.org.accountdemo;
+package io.github.suzp1984.accountdemo;
 
 /**
  * Created by moses on 9/22/15.
