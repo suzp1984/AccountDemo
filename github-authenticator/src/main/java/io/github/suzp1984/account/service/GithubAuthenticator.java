@@ -13,6 +13,7 @@ import android.util.Log;
 
 import io.github.suzp1984.account.githubdemo.GithubAccount;
 import io.github.suzp1984.account.githubdemo.GithubAuthenticatorActivity;
+import io.github.suzp1984.account.network.GithubAuthToken;
 
 /**
  * Created by moses on 9/15/15.
@@ -27,7 +28,7 @@ public class GithubAuthenticator extends AbstractAccountAuthenticator {
         super(context);
 
         mContext = context;
-        mAuthenticatorServer = new FakeAuthenticatorServer();
+        mAuthenticatorServer = new GithubAuthToken();
     }
 
     @Override

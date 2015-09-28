@@ -10,5 +10,5 @@ public class GithubAccount {
     /**
      * Auth token types
      */
-    public static final String AUTHTOKEN_TYPE_TEST = "test";
+    public static final String AUTHTOKEN_TYPE_TEST = "test (API)";
 }

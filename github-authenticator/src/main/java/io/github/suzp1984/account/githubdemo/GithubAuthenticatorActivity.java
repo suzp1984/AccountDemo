@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import io.github.suzp1984.account.network.GithubAuthToken;
 import io.github.suzp1984.account.service.FakeAuthenticatorServer;
 import io.github.suzp1984.account.service.IAuthenticatorServer;
 import io.github.suzp1984.account.authenticator.R;
@@ -228,7 +229,7 @@ public class GithubAuthenticatorActivity extends AccountAuthenticatorActivity {
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
 
-            IAuthenticatorServer server = new FakeAuthenticatorServer();
+            IAuthenticatorServer server = new GithubAuthToken();
 
             String authToken = server.getAuthToken(mUser, mPassword, GithubAccount.AUTHTOKEN_TYPE_TEST);
 

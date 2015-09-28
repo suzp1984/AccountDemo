@@ -40,7 +40,8 @@
                         android:layout_height="wrap_content"
                         android:hint="@string/prompt_user"
                         android:maxLines="1"
-                        android:singleLine="true" android:inputType="phone|text|number"/>
+                        android:singleLine="true"
+                        android:inputType="text"/>
 
             </android.support.design.widget.TextInputLayout>
 
